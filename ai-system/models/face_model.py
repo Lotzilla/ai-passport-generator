@@ -27,14 +27,36 @@ The returned dict matches the JSON contract expected by the Laravel backend:
 """
 from __future__ import annotations
 
+import os
+import urllib.request
 from typing import Optional
 
 import mediapipe as mp
 import numpy as np
 
-# ── MediaPipe landmark indices for FaceMesh (canonical 468-point model) ───────
-#   https://github.com/google/mediapipe/blob/master/mediapipe/modules/face_geometry/data/canonical_face_model_uv_visualization.png
+# ── Model file paths (downloaded once on first run) ──────────────────────────
+_MODELS_DIR           = os.path.dirname(os.path.abspath(__file__))
+_FACE_DETECTOR_PATH   = os.path.join(_MODELS_DIR, "blaze_face_short_range.tflite")
+_FACE_LANDMARKER_PATH = os.path.join(_MODELS_DIR, "face_landmarker.task")
 
+_FACE_DETECTOR_URL = (
+    "https://storage.googleapis.com/mediapipe-models/face_detector/"
+    "blaze_face_short_range/float16/1/blaze_face_short_range.tflite"
+)
+_FACE_LANDMARKER_URL = (
+    "https://storage.googleapis.com/mediapipe-models/face_landmarker/"
+    "face_landmarker/float16/1/face_landmarker.task"
+)
+
+
+def _ensure_model(url: str, path: str) -> None:
+    """Download model file if not already cached locally."""
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        urllib.request.urlretrieve(url, path)
+
+
+# ── MediaPipe landmark indices (canonical 478-point FaceLandmarker model) ─────
 _LEFT_EYE_INDICES  = [33, 160, 158, 133, 153, 144]   # left  iris ring
 _RIGHT_EYE_INDICES = [362, 385, 387, 263, 373, 380]  # right iris ring
 _NOSE_TIP_INDEX    = 4
@@ -51,19 +73,25 @@ class FaceDetector:
     """
 
     def __init__(self, min_detection_confidence: float = 0.5) -> None:
-        self._mp_face_det  = mp.solutions.face_detection
-        self._mp_face_mesh = mp.solutions.face_mesh
+        _ensure_model(_FACE_DETECTOR_URL,   _FACE_DETECTOR_PATH)
+        _ensure_model(_FACE_LANDMARKER_URL, _FACE_LANDMARKER_PATH)
 
-        self._detector = self._mp_face_det.FaceDetection(
-            model_selection=1,                        # 1 = full-range model (up to 5 m)
+        from mediapipe.tasks.python import BaseOptions
+        from mediapipe.tasks.python import vision as mp_vision
+
+        det_opts = mp_vision.FaceDetectorOptions(
+            base_options=BaseOptions(model_asset_path=_FACE_DETECTOR_PATH),
             min_detection_confidence=min_detection_confidence,
         )
-        self._mesher = self._mp_face_mesh.FaceMesh(
-            static_image_mode=True,
-            max_num_faces=1,
-            refine_landmarks=True,                    # adds iris / lip contour points
-            min_detection_confidence=min_detection_confidence,
+        self._detector = mp_vision.FaceDetector.create_from_options(det_opts)
+
+        lm_opts = mp_vision.FaceLandmarkerOptions(
+            base_options=BaseOptions(model_asset_path=_FACE_LANDMARKER_PATH),
+            num_faces=1,
+            min_face_detection_confidence=min_detection_confidence,
+            min_face_presence_confidence=min_detection_confidence,
         )
+        self._landmarker = mp_vision.FaceLandmarker.create_from_options(lm_opts)
 
     # ── Public API ─────────────────────────────────────────────────────────────
 
@@ -76,20 +104,27 @@ class FaceDetector:
         h, w = rgb_image.shape[:2]
         empty = self._empty_result(w, h)
 
+        mp_img = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_image)
+
         # ── Step 1: bounding box ───────────────────────────────────────────
-        det_result = self._detector.process(rgb_image)
+        det_result = self._detector.detect(mp_img)
         if not det_result.detections:
             return empty
 
-        detection   = det_result.detections[0]            # highest-confidence face
-        confidence  = detection.score[0]
-        bbox        = detection.location_data.relative_bounding_box
-        face_box    = self._rel_bbox_to_pixels(bbox, w, h)
+        detection  = det_result.detections[0]   # highest-confidence face
+        confidence = detection.categories[0].score
+        bb         = detection.bounding_box      # pixel coords in Tasks API
+        face_box   = {
+            "x":      max(0, bb.origin_x),
+            "y":      max(0, bb.origin_y),
+            "width":  min(bb.width,  w - max(0, bb.origin_x)),
+            "height": min(bb.height, h - max(0, bb.origin_y)),
+        }
 
-        # ── Step 2: landmarks via FaceMesh ────────────────────────────────
-        mesh_result = self._mesher.process(rgb_image)
-        if not mesh_result.multi_face_landmarks:
-            # Bounding box found but mesh failed — return box only, no landmarks
+        # ── Step 2: landmarks via FaceLandmarker ──────────────────────────
+        lm_result = self._landmarker.detect(mp_img)
+        if not lm_result.face_landmarks:
+            # Bounding box found but landmarks failed — return box only
             return {
                 "faceDetected": True,
                 "faceBox":      {**face_box, "img_w": w, "img_h": h},
@@ -97,7 +132,7 @@ class FaceDetector:
                 "confidence":   round(float(confidence), 4),
             }
 
-        lm = mesh_result.multi_face_landmarks[0].landmark
+        lm = lm_result.face_landmarks[0]   # list of NormalizedLandmark
 
         def px(idx: int) -> list[int]:
             """Landmark index → [pixel_x, pixel_y]."""
@@ -126,7 +161,7 @@ class FaceDetector:
     def close(self) -> None:
         """Release MediaPipe resources."""
         self._detector.close()
-        self._mesher.close()
+        self._landmarker.close()
 
     # ── Glasses detection ──────────────────────────────────────────────────────
 
@@ -204,19 +239,6 @@ class FaceDetector:
         self.close()
 
     # ── Private helpers ────────────────────────────────────────────────────────
-
-    @staticmethod
-    def _rel_bbox_to_pixels(
-        bbox,
-        img_w: int,
-        img_h: int,
-    ) -> dict:
-        """Convert MediaPipe normalised bbox → pixel coordinates (clamped)."""
-        x = max(0, int(bbox.xmin * img_w))
-        y = max(0, int(bbox.ymin * img_h))
-        bw = min(int(bbox.width  * img_w), img_w - x)
-        bh = min(int(bbox.height * img_h), img_h - y)
-        return {"x": x, "y": y, "width": bw, "height": bh}
 
     @staticmethod
     def _empty_result(img_w: int, img_h: int) -> dict:

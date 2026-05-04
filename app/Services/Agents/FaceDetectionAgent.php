@@ -400,11 +400,10 @@ class FaceDetectionAgent
         if (
             $w < 10 || $h < 10
             || $h < ($imgH * 0.06)                          // face < 6% of image height — too small
-            || $w > ($imgW * 0.92)                          // spans nearly the full width — not a face
             || $aspectRatio > 3.0                           // more than 3× wider than tall — not a face
             || $centroidRow > (self::GRID_ROWS * 0.85)      // cluster centre in bottom 15% — not a face
-            || $centroidCol < (self::GRID_COLS * 0.15)      // cluster entirely on left edge
-            || $centroidCol > (self::GRID_COLS * 0.85)      // cluster entirely on right edge
+            || $centroidCol < (self::GRID_COLS * 0.10)      // cluster entirely on left edge
+            || $centroidCol > (self::GRID_COLS * 0.90)      // cluster entirely on right edge
         ) {
             Log::info('FaceDetectionAgent: Skin cluster found but failed geometry checks — treating as no face.', [
                 'cluster_cells' => count($cluster),
