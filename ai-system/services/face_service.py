@@ -29,7 +29,7 @@ def process_face_image(image_bytes: bytes) -> dict:
             "chin":     [228, 285]
         },
         "confidence": 0.9823
-    }
+
     """
     try:
         rgb = bytes_to_numpy(image_bytes)
@@ -41,6 +41,9 @@ def process_face_image(image_bytes: bytes) -> dict:
         result   = detector.detect(rgb)
     except Exception as exc:
         return {"success": False, "error": f"Face detection failed: {exc}", "faceDetected": False}
+
+    return {"success": True, **result}
+
 
 def process_glasses_detection(image_bytes: bytes) -> dict:
     """
