@@ -12,7 +12,7 @@ class SupportChatController extends Controller
      *  including every agent, every AI model used, and how the system works.
      */
     private string $systemPrompt = <<<'PROMPT'
-You are a friendly, technically knowledgeable customer support assistant for **PassportAI**  a free web application that converts any selfie into an official passport photo using a fully automated 8-agent AI pipeline.
+You are a friendly, technically knowledgeable customer support assistant for **PassportAI**  a web application that converts any selfie into an official passport photo using a fully automated 8-agent AI pipeline.
 
 Your job is to help users understand the system, troubleshoot issues, and feel confident using the app. You know the entire technical stack in detail.
 
@@ -102,7 +102,7 @@ After processing, a "Download Passport Photo" button appears. The file is a PNG 
 
 
 PRICING & PRIVACY
-PassportAI is completely free. No account or payment needed. Uploaded photos are processed in temporary storage and are not stored permanently.
+PassportAI is a paid service. A Pro plan is available at $4.99/month, billed monthly with no long-term commitment. Uploaded photos are processed in temporary storage and are not stored permanently.
 
 
 TONE & BEHAVIOUR
@@ -269,61 +269,65 @@ PROMPT;
         }
 
         $faq = [
-            // Pipeline / AI tech questions
-            'how.*work|how.*process|behind.*scene|ai.*work|8.*agent|eight.*agent|agent|pipeline' =>
-                "Your photo goes through 8 AI agents automatically:\n1. Upload\n2. Face Detection (MediaPipe AI)\n3. Deskew (auto-straightens head tilt)\n4. Background Removal (UÂ²-Net AI)\n5. Crop & Centre\n6. Lighting Correction\n7. Compliance Check\n8. Response\nThe whole thing takes 20 seconds.",
+            // Pipeline / how it works
+            'how.*work|how.*process|how.*make|how.*generat|how.*creat|behind.*scene|ai.*work|what.*do.*app|what.*does.*it|explain.*process|explain.*app|tell.*me.*how|8.*agent|eight.*agent|agent|pipeline|step|stage' =>
+                "Your photo goes through 8 AI agents automatically:\n1. Upload\n2. Face Detection (MediaPipe AI)\n3. Deskew (auto-straightens head tilt)\n4. Background Removal (U\u00b2-Net AI)\n5. Crop & Centre\n6. Lighting Correction\n7. Compliance Check\n8. Response\nThe whole thing takes about 20 seconds.",
 
-            'mediapipe|face detect|landmark|bounding box' =>
-                "Face detection uses Google's MediaPipe it runs two models: FaceDetection (finds the face bounding box in milliseconds) and FaceMesh (maps 468 3D facial landmarks including the exact eye positions). The eye positions are used to straighten the head and perfectly centre the face in the output.",
+            // MediaPipe / face detection
+            'mediapipe|face.*detect|detect.*face|landmark|bounding.*box|face.*model|face.*mesh|how.*detect.*face|facial|face.*point|face.*recogni' =>
+                "Face detection uses Google's MediaPipe \u2014 it runs two models: FaceDetection (finds the face bounding box in milliseconds) and FaceMesh (maps 468 3D facial landmarks including the exact eye positions). The eye positions are used to straighten the head and perfectly centre the face in the output.",
 
-            'u2net|unet|rembg|background remov|segmentation|onnx' =>
-                "Background removal uses UÂ²-Net” a deep learning model that runs locally via a Python FastAPI microservice. It achieves pixel-precise separation of the subject from the background, even around hair and glasses. The result is composited onto a plain white canvas. On first use it downloads ~170 MB of ONNX model weights.",
+            // U2Net / background removal
+            'u2net|unet|rembg|background.*remov|remov.*background|segmentation|onnx|white.*background|cut.*out|cutout|background.*white|background.*replac|remove.*bg' =>
+                "Background removal uses U\u00b2-Net \u2014 a deep learning model that runs locally via a Python FastAPI microservice. It achieves pixel-precise separation of the subject from the background, even around hair and glasses. The result is composited onto a plain white canvas. On first use it downloads ~170 MB of ONNX model weights.",
 
-            'deskew|tilt|straighten|head.*lean|lean.*head|rotate|crooked' =>
-                "The Deskew Agent automatically detects head tilt by measuring the angle between your eye positions (using MediaPipe landmarks). It then rotates the entire image to make the eyes perfectly horizontal  exactly as passport standards require. It handles tilts up to 30Â°.",
+            // Deskew / head tilt
+            'deskew|tilt|tilted|straighten|head.*lean|lean.*head|rotate|crooked|angle|slanted|sideways|head.*angle|fix.*head|level.*head|not.*straight|is.*my.*head' =>
+                "The Deskew Agent automatically detects head tilt by measuring the angle between your eye positions (using MediaPipe landmarks). It then rotates the entire image to make the eyes perfectly horizontal \u2014 exactly as passport standards require. It handles tilts up to 30\u00b0.",
 
-            'light|dark|shadow|bright|dim|exposure|gamma' =>
+            // Lighting
+            'light|dark|shadow|bright|dim|exposure|gamma|too.*dark|too.*bright|dark.*photo|bad.*light|poor.*light|indoor|fix.*light|adjust.*light|colour|color|skin.*tone' =>
                 "The Lighting Agent uses gamma correction to fix the brightness of your photo. It measures the average luminance of your face (ignoring the white background), then mathematically computes the correction needed to reach the ideal brightness level. This works far better than simple brightness adjustments for shadowy or dark selfies.",
 
-            // Country questions
-            'country|countries|which.*support|document.*type' =>
-                "We support:\n United States (2x2\", 600px—600px)\nUnited Kingdom (35mm—45mm, 413px—531px)\n EU / Schengen (35mm—45mm, 413px—531px)\n Canada (50mm—70mm, 591px—827px)\n Australia (35mm—45mm, 413px—531px)",
+            // Country / supported countries
+            'country|countries|which.*support|supported.*country|what.*country|nation|passport.*for|document.*type|us.*passport|uk.*passport|canada|australia|schengen|european|america|united.*states|united.*kingdom|british' =>
+                "We support:\n United States\n United Kingdom \n EU / Schengen Area\n Canada \n Australia",
 
-            // File format
-            'file|format|jpg|jpeg|png|size|mb|upload.*type' =>
+            // File format / upload type
+            'file.*type|file.*format|what.*format|what.*file|accept.*file|supported.*file|jpg|jpeg|png|size.*limit|max.*size|file.*size|how.*big|upload.*type|can.*i.*upload|what.*upload|what.*image' =>
                 "We accept JPG and PNG images up to 10 MB. Higher resolution photos produce better results.",
 
-            // Requirements
-            'requir|photo.*tip|good.*photo|selfie.*tip|need.*photo|what.*upload' =>
-                "The system auto-corrects most issues, but for the best quality: Face the camera directly (large yaw/pitch angles can't be fixed) Any lighting is fine  the system corrects it Any background is fine  UÂ²-Net removes it Max 10 MB, JPG or PNG",
+            // Photo requirements / tips
+            'requir|photo.*tip|good.*photo|selfie.*tip|need.*photo|best.*photo|perfect.*photo|what.*photo|photo.*need|how.*selfie|selfie.*how|what.*selfie|advice|recommend|suggest' =>
+                "The system auto-corrects most issues, but for the best results: face the camera directly, use reasonable lighting, and make sure your full face is visible. Any background is fine \u2014 U\u00b2-Net removes it. Max 10 MB, JPG or PNG.",
 
             // Errors / failures
-            'fail|wrong|error|not.*pass|reject|issue|problem|didn.*work|not.*work' =>
-                "The only reason the pipeline can fail is if no face is detected at all. If that happened: Make sure your face is fully visible and well-lit Face the camera directly Don't cover your face with objects\n\nEverything else (background, lighting, tilt) is handled automatically  you don't need a perfect selfie!",
+            'fail|failed|failure|wrong|error|not.*pass|reject|issue|problem|didn.*work|not.*work|broken|stuck|something.*wrong|went.*wrong|not.*generat|won.*t.*work|doesn.*work|can.*t.*process|not.*processing|not.*detecting' =>
+                "The only reason the pipeline can fail is if no face is detected at all. If that happened:\n\u2022 Make sure your face is fully visible and well-lit\n\u2022 Face the camera directly\n\u2022 Don't cover your face with objects\n\nEverything else (background, lighting, tilt) is handled automatically \u2014 you don't need a perfect selfie!",
 
-            // Time
-            'how.*long|time|fast|slow|wait|second|minute' =>
-                "Processing takes 20 seconds. Most of the time is background removal (UA²-Net AI model). The first run may be slower while the model weights download (~170 MB). Subsequent runs are much faster.",
+            // Time / speed
+            'how.*long|how.*fast|how.*slow|how.*quick|take.*long|long.*take|duration|speed|quick|wait|waiting|second|minute' =>
+                "Processing takes about 20 seconds. Most of the time is background removal (U\u00b2-Net AI model). The first run may be slower while the model weights download (~170 MB). Subsequent runs are much faster.",
 
-            // Cost
-            'price|cost|free|paid|payment|charge|money' =>
-                "PassportAI is completely free to use! No account, no payment, no limits.",
+            // Pricing / cost
+            'price|pricing|cost|how.*much|paid|payment|charge|money|expensive|cheap|afford|subscription|plan|per.*month|monthly|fee|bill' =>
+                "PassportAI is a paid service. The Pro plan is \$4.99/month, billed monthly with no long-term commitment. You can cancel anytime.",
 
-            // Download
-            'download|save|get.*photo|where.*photo|after.*done' =>
+            // Download / output
+            'download|save.*photo|get.*photo|where.*photo|after.*done|my.*photo|photo.*ready|result|output|finish|completed|retrieve|get.*result' =>
                 "Once processing completes, a \"Download Passport Photo\" button appears. Click it to save a PNG at the official dimensions for your chosen country.",
 
-            // Privacy
-            'privacy|data|store|keep|gdpr|delete|personal' =>
+            // Privacy / data
+            'privacy|data|store|keep|gdpr|delete|personal|my.*data|my.*image|my.*photo.*safe|safe|secure|security|share.*photo|who.*see' =>
                 "Your photos are processed in temporary storage and are not stored permanently on our servers. We don't share your images with third parties.",
 
             // Greetings
-            'hi|hello|hey|hiya|howdy|sup|yo' =>
-                "Hey! I'm the PassportAI support assistant. I know the full technical pipeline ask me anything about how the app works, the AI models used, supported countries, or troubleshooting.",
+            'hi\b|hello|hey\b|hiya|howdy|sup\b|yo\b|good.*morning|good.*afternoon|good.*evening|good.*day|greetings|what.*up' =>
+                "Hey! I'm the PassportAI support assistant. I know the full technical pipeline \u2014 ask me anything about how the app works, the AI models used, supported countries, or troubleshooting.",
 
-            // Thanks 
-            'thanks|thank you|thx|ty|cheers|great|awesome|perfect' =>
-                "You're welcome! ðŸ˜Š Good luck with your passport photo!",
+            // Thanks / positive feedback
+            'thank|thanks|thx|ty\b|cheers|great|awesome|perfect|brilliant|helpful|appreciate|wonderful|excellent|amazing|good.*job|well.*done' =>
+                "You're welcome! Good luck with your passport photo!",
         ];
 
         foreach ($faq as $pattern => $answer) {

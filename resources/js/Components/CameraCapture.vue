@@ -98,19 +98,6 @@
         </div>
       </div>
 
-      <!-- Camera switcher -->
-      <div v-if="cameras.length > 1 && !snapshot" class="px-5 pt-3 pb-1">
-        <select
-          v-model="selectedCamera"
-          @change="switchCamera"
-          class="w-full text-xs rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-        >
-          <option v-for="cam in cameras" :key="cam.deviceId" :value="cam.deviceId">
-            {{ cam.label || `Camera ${cam.index + 1}` }}
-          </option>
-        </select>
-      </div>
-
       <!-- Action buttons -->
       <div class="flex gap-3 px-5 py-4">
         <button

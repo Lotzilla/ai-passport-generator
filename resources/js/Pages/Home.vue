@@ -21,7 +21,7 @@
         <div class="ml-auto flex items-center gap-3">
           <a href="#app" class="hidden sm:inline text-sm text-gray-500 hover:text-indigo-600 font-medium transition-colors">Sign in</a>
           <button @click="showToolModal = true" class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl px-4 py-2.5 transition-colors shadow-md shadow-indigo-100">
-            Try for free
+            Try Now
             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
             </svg>
@@ -180,28 +180,11 @@
         <div class="text-center mb-16">
           <p class="text-xs font-bold text-indigo-600 uppercase tracking-widest mb-3">Pricing</p>
           <h2 class="text-4xl font-extrabold text-gray-900">Simple, honest pricing</h2>
-          <p class="mt-4 text-gray-500">Start free. Upgrade when you need more.</p>
+          <p class="mt-4 text-gray-500">One simple plan. Everything you need for perfect passport photos.</p>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-          <!-- Starter -->
-          <div class="bg-white rounded-3xl border border-gray-200 p-8 flex flex-col">
-            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Starter</p>
-            <div class="mt-4 mb-2 flex items-end gap-2">
-              <span class="text-4xl font-extrabold text-gray-900">Free</span>
-            </div>
-            <p class="text-sm text-gray-400 mb-8">No credit card needed</p>
-            <ul class="space-y-3 flex-1 text-sm">
-              <li v-for="item in PLANS.starter" :key="item.text" class="flex items-center gap-2.5" :class="item.included ? 'text-gray-700' : 'text-gray-300'">
-                <svg v-if="item.included" class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                <svg v-else class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                {{ item.text }}
-              </li>
-            </ul>
-            <a href="#app" class="mt-8 block text-center border border-gray-200 hover:border-indigo-300 text-gray-700 hover:text-indigo-700 font-semibold rounded-2xl py-3.5 text-sm transition-colors">Get started free</a>
-          </div>
+        <div class="flex justify-center">
           <!-- Pro -->
-          <div class="bg-indigo-600 rounded-3xl p-8 flex flex-col relative overflow-hidden shadow-2xl shadow-indigo-200 md:-mt-4 md:-mb-4">
-            <div class="absolute top-0 right-0 bg-amber-400 text-amber-900 text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-bl-xl">Most popular</div>
+          <div class="bg-indigo-600 rounded-3xl p-10 flex flex-col overflow-hidden shadow-2xl shadow-indigo-200 w-full max-w-md">
             <p class="text-xs font-bold text-indigo-300 uppercase tracking-wider">Pro</p>
             <div class="mt-4 mb-2 flex items-end gap-2">
               <span class="text-4xl font-extrabold text-white">$4.99</span>
@@ -215,23 +198,7 @@
                 {{ item.text }}
               </li>
             </ul>
-            <a href="#app" class="mt-8 block text-center bg-white hover:bg-indigo-50 text-indigo-700 font-bold rounded-2xl py-3.5 text-sm transition-colors shadow-lg">Start Pro — $4.99/mo</a>
-          </div>
-          <!-- Business -->
-          <div class="bg-white rounded-3xl border border-gray-200 p-8 flex flex-col">
-            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Business</p>
-            <div class="mt-4 mb-2 flex items-end gap-2">
-              <span class="text-4xl font-extrabold text-gray-900">$19.99</span>
-              <span class="text-gray-400 text-sm mb-1">/ month</span>
-            </div>
-            <p class="text-sm text-gray-400 mb-8">For teams and developers</p>
-            <ul class="space-y-3 flex-1 text-sm text-gray-700">
-              <li v-for="item in PLANS.business" :key="item.text" class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                {{ item.text }}
-              </li>
-            </ul>
-            <a href="#app" class="mt-8 block text-center border border-gray-200 hover:border-indigo-300 text-gray-700 hover:text-indigo-700 font-semibold rounded-2xl py-3.5 text-sm transition-colors">Contact sales</a>
+            <a href="#app" class="mt-8 block text-center bg-white hover:bg-indigo-50 text-indigo-700 font-bold rounded-2xl py-3.5 text-sm transition-colors shadow-lg">Get Started — $4.99/mo</a>
           </div>
         </div>
       </div>
@@ -744,14 +711,6 @@ const FEATURES = [
 ]
 
 const PLANS = {
-  starter: [
-    { text: '3 photos per month',  included: true  },
-    { text: 'All 5 countries',     included: true  },
-    { text: 'Standard resolution', included: true  },
-    { text: 'AI support chat',     included: true  },
-    { text: 'No watermark',        included: false },
-    { text: 'API access',          included: false },
-  ],
   pro: [
     { text: 'Unlimited photos',               included: true  },
     { text: 'All countries + new ones first', included: true  },
@@ -759,14 +718,6 @@ const PLANS = {
     { text: 'No watermark',                   included: true  },
     { text: 'Priority AI support',            included: true  },
     { text: 'API access',                     included: false },
-  ],
-  business: [
-    { text: 'Everything in Pro'           },
-    { text: 'REST API access'             },
-    { text: 'Bulk processing (50/batch)'  },
-    { text: 'White-label output'          },
-    { text: 'Dedicated support'           },
-    { text: 'SLA guarantee'               },
   ],
 }
 
